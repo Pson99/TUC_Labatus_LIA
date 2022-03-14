@@ -1,0 +1,305 @@
+--[[
+<Script Version="1">
+  <Parameters>
+    <Parameter>
+      <Name>Sniffer_on_off</Name>
+      <Value>true</Value>
+    </Parameter>
+    <Parameter>
+      <Name>Test_Max_Brightness_Warmest</Name>
+      <Value>false</Value>
+    </Parameter>
+    <Parameter>
+      <Name>Test_Max_Brightness_Warm</Name>
+      <Value>false</Value>
+    </Parameter>
+    <Parameter>
+      <Name>Test_Max_Brightness_Cold</Name>
+      <Value>false</Value>
+    </Parameter>
+    <Parameter>
+      <Name>Test_Max_Brightness_Coldest</Name>
+      <Value>false</Value>
+    </Parameter>
+    <Parameter>
+      <Name>Test_coldest_brightness_254</Name>
+      <Value>false</Value>
+    </Parameter>
+    <Parameter>
+      <Name>Test_coldest_brightness_190</Name>
+      <Value>false</Value>
+    </Parameter>
+    <Parameter>
+      <Name>Test_coldest_brightness_125</Name>
+      <Value>false</Value>
+    </Parameter>
+    <Parameter>
+      <Name>Test_coldest_brightness_65</Name>
+      <Value>false</Value>
+    </Parameter>
+    <Parameter>
+      <Name>Test_On_Off</Name>
+      <Value>false</Value>
+    </Parameter>
+    <Parameter>
+      <Name>Iterations</Name>
+      <Value>1</Value>
+    </Parameter>
+  </Parameters>
+  <Resources>
+    <Resource Category="SMART_TV">
+      <Name>STB</Name>
+      <Id>STB1</Id>
+    </Resource>
+    
+  </Resources>
+</Script>
+]]
+
+-------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------- System time and date functions  --------------------------------------------------------
+
+local clock = os.clock
+
+-- Function for "sleep" inside testscript
+function sleep(n)
+    local t0 = clock()
+    while clock() - t0 <= n do 
+    end
+
+end
+
+-- Function for getting correct time and date for log comparison
+function time_and_date()
+    local time = os.date("*t")
+    local timestamp = string.format("%02d-%02d-%02d_%02d-%02d",time.year, time.month, time.day, time.hour, time.min)
+    return timestamp
+end
+
+-- Parameters for log comparison setup
+--timestamp = time_and_date()
+extension = ".txt"
+--filename = string.format("C:\\TestWizard\\Scripts\\Log\\testlogg__%s%s",timestamp, extension)
+
+
+-------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------- Runtime parameters initialization ------------------------------------------------------
+
+sniffer = Arg.Sniffer_on_off
+Total_iterations = tonumber(Arg.Iterations)
+Iterations_passed = 0
+Iterations_failed = 0
+passed_test = 0
+failed_test = 0
+
+--------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------- Preconditions --------------------------------------------------------------------------
+
+-- Fil med de olika testerna:
+lights = dofile("light_functions2.lua")
+
+-- Test: "On/Off"
+test_on_off = Arg.Test_On_Off
+-- Test: "Warmest color temperature"
+test_max_brightness_warmest = Arg.Test_Max_Brightness_Warmest
+-- Test: "Warm color temperature"
+test_max_brightness_warm = Arg.Test_Max_Brightness_Warm
+-- Test: "Cold color temperature"
+test_max_brightness_cold = Arg.Test_Max_Brightness_Cold
+-- Test: "Coldest color temperature"
+test_max_brightness_coldest = Arg.Test_Max_Brightness_Coldest
+-- Test: "Test_coldest_brightness_254"
+test_coldest_brightness_254 = Arg.Test_coldest_brightness_254
+-- Test: "Test_coldest_brightness_190"
+test_coldest_brightness_190 = Arg.Test_coldest_brightness_190
+-- Test: "Test_coldest_brightness_125"
+test_coldest_brightness_125 = Arg.Test_coldest_brightness_125
+-- Test: "Test_coldest_brightness_65"
+test_coldest_brightness_65 = Arg.Test_coldest_brightness_65
+
+
+--------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------- Start recording -----------------------------------------------------------------------
+
+if (sniffer == "true") then
+    print("ZigBee-traffic recording started")
+    os.execute('bash login-sniffer.sh & exit')
+else
+    print("No recording of Zigbee-traffic")
+end
+
+--------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------- Script & test-setup ------------------------------------------------------------------
+
+for counter = 1, Total_iterations, 1 do
+    print(">>>>>>>>>>>>>>>>> Iteration " .. counter.. " <<<<<<<<<<<<<<<<<<<<<")
+       
+    if (test_max_brightness_warmest == "true") then
+        -- Set correct light options and define correct path for MQTT-comparison log-file
+        timestamp = time_and_date()
+        filename = string.format("C:\\TestWizard\\Scripts\\Log\\testlogg__%s%s",timestamp, extension)
+        os.execute('python C:\\Users\\ts-player\\OneDrive\\Desktop\\Python_lights\\mqtt_logg_sysarg.py "IKEA lampa 65545" brightness 254 ')
+        os.execute('python C:\\Users\\ts-player\\OneDrive\\Desktop\\Python_lights\\mqtt_logg_sysarg.py "IKEA lampa 65545" color_temp 450 ')
+        
+        similarity=lights.max_brightness_warmest()
+    
+    elseif (test_max_brightness_warm == "true") then
+        -- Set correct light options and define correct path for MQTT-comparison log-file
+        timestamp = time_and_date()
+        filename = string.format("C:\\TestWizard\\Scripts\\Log\\testlogg__%s%s",timestamp, extension)
+        os.execute('python C:\\Users\\ts-player\\OneDrive\\Desktop\\Python_lights\\mqtt_logg_sysarg.py "IKEA lampa 65545" brightness 254 ')
+        os.execute('python C:\\Users\\ts-player\\OneDrive\\Desktop\\Python_lights\\mqtt_logg_sysarg.py "IKEA lampa 65545" color_temp 380 ')
+        
+        similarity = lights.max_brightness_warm()
+        
+    elseif (test_max_brightness_cold == "true") then
+        -- Set correct light options and define correct path for MQTT-comparison log-file
+        timestamp = time_and_date()
+        filename = string.format("C:\\TestWizard\\Scripts\\Log\\testlogg__%s%s",timestamp, extension)
+        os.execute('python C:\\Users\\ts-player\\OneDrive\\Desktop\\Python_lights\\mqtt_logg_sysarg.py "IKEA lampa 65545" brightness 254 ')
+        os.execute('python C:\\Users\\ts-player\\OneDrive\\Desktop\\Python_lights\\mqtt_logg_sysarg.py "IKEA lampa 65545" color_temp 320 ')
+                
+        similarity = lights.max_brightness_cold()
+        
+    elseif (test_max_brightness_coldest == "true") then
+        -- Set correct light options and define correct path for MQTT-comparison log-file
+        timestamp = time_and_date()
+        filename = string.format("C:\\TestWizard\\Scripts\\Log\\testlogg__%s%s",timestamp, extension)
+        os.execute('python C:\\Users\\ts-player\\OneDrive\\Desktop\\Python_lights\\mqtt_logg_sysarg.py "IKEA lampa 65545" brightness 254 ')
+        os.execute('python C:\\Users\\ts-player\\OneDrive\\Desktop\\Python_lights\\mqtt_logg_sysarg.py "IKEA lampa 65545" color_temp 250 ')
+        similarity = lights.max_brightness_coldest()
+        
+    elseif (test_coldest_brightness_254 == "true") then
+        -- Set correct light options and define correct path for MQTT-comparison log-file
+        timestamp = time_and_date()
+        filename = string.format("C:\\TestWizard\\Scripts\\Log\\testlogg__%s%s",timestamp, extension)
+        os.execute('python C:\\Users\\ts-player\\OneDrive\\Desktop\\Python_lights\\mqtt_logg_sysarg.py "IKEA lampa 65545" brightness 254 ')
+        os.execute('python C:\\Users\\ts-player\\OneDrive\\Desktop\\Python_lights\\mqtt_logg_sysarg.py "IKEA lampa 65545" color_temp 250 ')
+        similatiry = lights.brightness_level_254()
+        
+    elseif (test_coldest_brightness_190 == "true") then
+        -- Set correct light options and define correct path for MQTT-comparison log-file
+        timestamp = time_and_date()
+        filename = string.format("C:\\TestWizard\\Scripts\\Log\\testlogg__%s%s",timestamp, extension)
+        os.execute('python C:\\Users\\ts-player\\OneDrive\\Desktop\\Python_lights\\mqtt_logg_sysarg.py "IKEA lampa 65545" brightness 190 ')
+        os.execute('python C:\\Users\\ts-player\\OneDrive\\Desktop\\Python_lights\\mqtt_logg_sysarg.py "IKEA lampa 65545" color_temp 250 ')
+        similatiry = lights.brightness_level_190()
+        
+    elseif (test_coldest_brightness_125 == "true") then
+        -- Set correct light options and define correct path for MQTT-comparison log-file
+        timestamp = time_and_date()
+        filename = string.format("C:\\TestWizard\\Scripts\\Log\\testlogg__%s%s",timestamp, extension)
+        os.execute('python C:\\Users\\ts-player\\OneDrive\\Desktop\\Python_lights\\mqtt_logg_sysarg.py "IKEA lampa 65545" brightness 125 ')
+        os.execute('python C:\\Users\\ts-player\\OneDrive\\Desktop\\Python_lights\\mqtt_logg_sysarg.py "IKEA lampa 65545" color_temp 250 ')
+        similatiry = lights.brightness_level_125()
+        
+    elseif (test_coldest_brightness_65 == "true") then
+        -- Set correct light options and define correct path for MQTT-comparison log-file
+        timestamp = time_and_date()
+        filename = string.format("C:\\TestWizard\\Scripts\\Log\\testlogg__%s%s",timestamp, extension)
+        os.execute('python C:\\Users\\ts-player\\OneDrive\\Desktop\\Python_lights\\mqtt_logg_sysarg.py "IKEA lampa 65545" brightness 65 ')
+        os.execute('python C:\\Users\\ts-player\\OneDrive\\Desktop\\Python_lights\\mqtt_logg_sysarg.py "IKEA lampa 65545" color_temp 250 ')
+        similatiry = lights.brightness_level_65()
+        
+    elseif (test_on_off == "true") then
+        -- Set correct light options and define correct path for MQTT-comparison log-file
+        timestamp = time_and_date()
+        filename = string.format("C:\\TestWizard\\Scripts\\Log\\testlogg__%s%s",timestamp, extension)
+        os.execute('python C:\\Users\\ts-player\\OneDrive\\Desktop\\Python_lights\\mqtt_logg_sysarg.py "IKEA lampa 65545" state OFF ')
+        os.execute('python C:\\Users\\ts-player\\OneDrive\\Desktop\\Python_lights\\mqtt_logg_sysarg.py "IKEA lampa 65545" brightness 254 ')
+        os.execute('python C:\\Users\\ts-player\\OneDrive\\Desktop\\Python_lights\\mqtt_logg_sysarg.py "IKEA lampa 65545" color_temp 320 ')
+        similarity = lights.on_off()
+        
+    end
+    
+    print("Light control-command sent")
+
+    sleep(1)   
+
+    if (Similarity > 50) then
+        passed_test = passed_test + 1
+        print("Passed ",passed_test," times.")
+        Iterations_passed = Iterations_passed + 1
+    else
+        failed_test = failed_test + 1
+        print("Failed ",failed_test," times.")
+        Iterations_failed = Iterations_failed + 1
+    end
+   
+end
+--------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------ Stop recording ----------------------------------------------------
+
+if (sniffer == "true") then
+    print("ZigBee-traffic recording stopped")
+    os.execute('bash stop-sniffer.sh & exit')
+else
+    print("Test completed without recording ZigBee-traffic")
+end
+
+
+--------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------ Check MQTT-traffic in/out -----------------------------------------
+
+filename = string.format("C:\\TestWizard\\Scripts\\Log\\testlogg__%s%s", timestamp, extension)
+
+print ("---------------------------------------------------")
+print(filename)
+print ("---------------------------------------------------")
+
+sleep(2)
+
+--Open log-file from Python MQTT-file
+file = io.open(filename)
+lines = file:lines()
+
+
+-- Variables for validation
+pass = false
+fail = false
+
+-- Looping through log-file and search for fail/pass
+for line in lines do  
+    
+    if string.find(line, "PASS") then 
+        pass = true
+    else
+        fail = true
+    end
+end
+
+-- Print out result of check
+if (pass == true) then
+    print ("MQTT Log-traffic Correct")
+    print ("MQTT Passed")
+else
+    print ("MQTT Log-traffic Incorrect")
+    print ("MQTT Failed")
+end
+
+file:close()
+
+--------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------ Overall result ----------------------------------------------------
+
+if (Iterations_passed == Total_iterations )   then
+    return ResultCodes.PASS, 0, "All " .. Total_iterations .. " passed"
+elseif (Iterations_failed > 0) and  (Iterations_failed ~= Total_iterations ) then
+    return ResultCodes.FAIL, 0, Iterations_passed .. " Iterations passed and " .. Iterations_failed .. " Iterations failed"
+elseif (Iterations_failed == Total_iterations )  then
+    return ResultCodes.FAIL, 0, "All " .. Total_iterations .. " failed"
+else
+    return ResultCodes.FAIL, 0, "Something went wrong"
+end
+
+
+--------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------- EOF -------------------------------------------------------
+
+--[[
+Kamera inställningar:
+Manuell fokus
+Manuell exponering
+Automatisk vitbalans
+Program läge: P
+]]

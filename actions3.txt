@@ -1,0 +1,3 @@
+echo Stoping recording of ZigBee-traffic
+echo Labatus2022 | sudo -S pkill whsniff
+echo -e "\nFinished"
